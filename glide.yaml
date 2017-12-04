@@ -1,9 +1,0 @@
-package: github.com/bitvector2/testgo
-homepage: https://github.com/bitvector2/testgo
-license: Apache
-owners:
-- name: Steven Logue
-  email: steven.logue@bitvectorlabs.com
-  homepage: http://www.bitvectorlabs.com
-import:
-- package: github.com/golang/glog
