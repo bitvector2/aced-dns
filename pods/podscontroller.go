@@ -113,41 +113,9 @@ func (c *Controller) processPod(key string) error {
 	}
 
 	if exists {
-		// Note that you also have to check the uid if you have a local controlled resource, which
-		// is dependent on the actual instance, to detect that a Pod was recreated with the same name
-		for _, container := range obj.(*apiV1.Pod).Spec.Containers {
-			log.Infof("pod %s has container %s\n", obj.(*apiV1.Pod).GetName(), container.Name)
-			//vulnerabilityCounts, browserUrl := c.vulnsHandler.GetReport(container.Image)
-			//
-			//if vulnerabilityCounts != nil {
-			//	for severity, count := range *vulnerabilityCounts {
-			//		c.metricsHandler.AddMetric(
-			//			obj.(*apiV1.Pod).GetName(),
-			//			obj.(*apiV1.Pod).GetNamespace(),
-			//			container.Name,
-			//			container.Image,
-			//			severity,
-			//			count,
-			//			browserUrl,
-			//		)
-			//	}
-			//} else {
-			//	// If the image has nil vulnerability counts report a count of 0 of severity Null
-			//	c.metricsHandler.AddMetric(
-			//		obj.(*apiV1.Pod).GetName(),
-			//		obj.(*apiV1.Pod).GetNamespace(),
-			//		container.Name,
-			//		container.Image,
-			//		"Null",
-			//		0,
-			//		"",
-			//	)
-			//}
-		}
+		log.Infof("pod %s has IP address %s\n", key, obj.(*apiV1.Pod).Status.PodIP)
 	} else {
-		log.Infof("pod %s does not exist anymore\n", key)
-		// tokens := strings.Split(key, `/`)
-		//c.metricsHandler.DeleteMetrics(tokens[1], tokens[0])
+		log.Infof("pod %s does not exist\n", key)
 	}
 
 	return nil

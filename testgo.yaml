@@ -13,7 +13,7 @@ spec:
     - name: shared-data
       mountPath: /shared-data
     command: ["testgo"]
-    args: ["-outputdir", "/shared-data"]
+    args: ["-logtostderr", "-outputdir", "/shared-data"]
   - name: named-container
     image: quay.cnqr.delivery/containerhosting/testgo
     volumeMounts:
