@@ -10,9 +10,9 @@ COPY . .
 
 RUN apk --update --no-cache add bind && \
     cp -p /etc/bind/named.conf.authoritative /etc/bind/named.conf && \
-    echo 'include "/shared-data/acllist.conf";' >> /etc/bind/named.conf && \
-    echo 'include "/shared-data/viewlist.conf";' >> /etc/bind/named.conf && \
     rndc-confgen -a
+    # echo 'include "/shared-data/acllist.conf";' >> /etc/bind/named.conf && \
+    # echo 'include "/shared-data/viewlist.conf";' >> /etc/bind/named.conf && \
 
 RUN go-wrapper install
 

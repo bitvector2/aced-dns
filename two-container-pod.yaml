@@ -8,14 +8,14 @@ spec:
     emptyDir: {}
   containers:
   - name: named-container
-    image: custom-dns
+    image: quay.cnqr.delivery/containerhosting/testgo
     volumeMounts:
     - name: shared-data
       mountPath: /shared-data
     command: ["named"]
     args: ["-g"]
   - name: rndc-container
-    image: custom-dns
+    image: quay.cnqr.delivery/containerhosting/testgo
     volumeMounts:
     - name: shared-data
       mountPath: /shared-data
