@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testgo
+spec:
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  containers:
+  - name: testgo-container
+    image: quay.cnqr.delivery/containerhosting/testgo
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared-data
+    command: ["testgo"]
+    args: ["-outputdir", "/shared-data"]
+  - name: named-container
+    image: quay.cnqr.delivery/containerhosting/testgo
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared-data
+    command: ["named"]
+    args: ["-g"]

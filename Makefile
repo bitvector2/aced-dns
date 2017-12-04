@@ -1,7 +1,8 @@
 NAME := testgo
 PKG := github.com/bitvector2/$(NAME)
+FILES := $(shell find . -type f -name "*.go" | egrep -v "./vendor")
 
-.PHONY: clean docker-clean build docker-build test docker-test push docker-push
+.PHONY: clean docker-clean prep build docker-build test docker-test push docker-push
 
 all: build
 
@@ -12,14 +13,21 @@ docker-clean:
 	docker rm $(shell docker ps -aq) || true
 	docker rmi $(shell docker images -aq) || true
 
-build:
+prep:
+	go fix $(PKG)
+	go vet $(PKG)
+	goimports -w $(FILES)
+	golint ${PKG}
+	@echo "** Code prepared"
+
+build: prep
 	go build
 
 docker-build:
 	docker build -t $(NAME):latest .
 
 test: build
-	./$(NAME)
+	./$(NAME) -h || true
 
 docker-test: docker-build
 	docker run -i -t $(NAME):latest

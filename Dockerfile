@@ -9,10 +9,10 @@ WORKDIR /go/src/github.com/bitvector2/testgo
 COPY . .
 
 RUN apk --update --no-cache add bind && \
+    rndc-confgen -a && \
     cp -p /etc/bind/named.conf.authoritative /etc/bind/named.conf && \
-    rndc-confgen -a
-    # echo 'include "/shared-data/acllist.conf";' >> /etc/bind/named.conf && \
-    # echo 'include "/shared-data/viewlist.conf";' >> /etc/bind/named.conf && \
+    echo 'include "/shared-data/named.conf.acllist";' >> /etc/bind/named.conf && \
+    echo 'include "/shared-data/named.conf.viewlist";' >> /etc/bind/named.conf
 
 RUN go-wrapper install
 

@@ -1,87 +1,21 @@
 package main
 
 import (
-	"os"
-	"text/template"
+	"bytes"
+	"flag"
 	"fmt"
 	"io/ioutil"
-	"bytes"
+	"os"
+	"text/template"
+
+	"github.com/bitvector2/testgo/pods"
+	log "github.com/golang/glog"
 )
 
 const (
-	journalFile = "/tmp/.touchfile"
-)
+	version = "1.0.0"
 
-var (
-	journalMessages = make(map[string]bool)
-)
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
-func createFile(filename string, newData []byte, perm os.FileMode) (err error) {
-	// this is just a vanity wrapper
-	err = nil
-
-	err = ioutil.WriteFile(filename, newData, perm)
-
-	return
-
-}
-
-func updateFile(filename string, newData []byte, perm os.FileMode) (changed bool, err error) {
-	changed = false
-	err = nil
-	var oldData []byte
-
-	oldData, err = ioutil.ReadFile(filename)
-	// read error occurred thus createFile should be called
-	if err != nil {
-		return
-	}
-
-	if bytes.Compare(oldData, newData) != 0 {
-		err = ioutil.WriteFile(filename, newData, perm)
-		changed = true
-	}
-
-	return
-}
-
-func deleteFile(filename string) (err error) {
-	// this is just a vanity wrapper
-	err = nil
-
-	err = os.Remove(filename)
-
-	return
-}
-
-func writeJournal() (err error){
-	err = nil
-	var buf bytes.Buffer
-
-	for k := range journalMessages {
-		buf.WriteString(k)
-	}
-
-	err = ioutil.WriteFile(journalFile, buf.Bytes(), os.FileMode(0666))
-
-	journalMessages = make(map[string]bool)
-
-	return
-}
-
-func addToJournal(message string) {
-	journalMessages[message] = true
-}
-
-func main() {
-	// Define a template.
-	const letter = `
+	letter = `
 Dear {{.Name}},
 {{if .Attended}}
 It was a pleasure to see you at the wedding.
@@ -94,6 +28,63 @@ Thank you for the lovely {{.}}.
 Best wishes,
 Josie
 `
+)
+
+func check(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func createFile(filename string, newData []byte, perm os.FileMode) error {
+	return ioutil.WriteFile(filename, newData, perm)
+}
+
+func updateFile(filename string, newData []byte, perm os.FileMode) (bool, error) {
+	var err error
+	var oldData []byte
+
+	// read error occurred thus createFile should be called
+	oldData, err = ioutil.ReadFile(filename)
+	if err != nil {
+		return false, err
+	}
+
+	if bytes.Compare(oldData, newData) != 0 {
+		err = ioutil.WriteFile(filename, newData, perm)
+		return true, err
+	}
+
+	return false, nil
+}
+
+func deleteFile(filename string) error {
+	return os.Remove(filename)
+}
+
+func main() {
+	outputDir := flag.String("outputdir", "", "Absolute path to the output directory")
+	kubeConfig := flag.String("kubeconfig", "", "Absolute path to the Kubernetes config file")
+	masterURL := flag.String("masterurl", "", "URL to Kubernetes API server")
+	flag.Parse()
+
+	var err error
+	var buf bytes.Buffer
+	buf.WriteString("// empty\n")
+
+	err = createFile(fmt.Sprintf("%s/named.conf.acllist", *outputDir), buf.Bytes(), os.FileMode(0666))
+	check(err)
+
+	err = createFile(fmt.Sprintf("%s/named.conf.viewlist", *outputDir), buf.Bytes(), os.FileMode(0666))
+	check(err)
+
+	// Create our custom controller
+	c := pods.New(*kubeConfig, *masterURL)
+
+	// Start our custom controller
+	stop := make(chan struct{})
+	defer close(stop)
+	go c.Run(1, stop)
 
 	// Prepare some data to insert into the template.
 	type Recipient struct {
@@ -111,22 +102,25 @@ Josie
 
 	// Execute the template for each recipient.
 	for i, r := range recipients {
-		filename := fmt.Sprintf("/tmp/%d.txt", i)
+		filename := fmt.Sprintf("%s/%d.txt", *outputDir, i)
 		var buf bytes.Buffer
 		err := t.Execute(&buf, r)
 		check(err)
 
 		changed, err := updateFile(filename, buf.Bytes(), os.FileMode(0666))
 		if changed {
-			addToJournal(fmt.Sprintf("File: %s changed...\n", filename))
+			log.Infof("File: %s changed...\n", filename)
 
 		}
 		if err != nil {
 			err := createFile(filename, buf.Bytes(), os.FileMode(0666))
 			check(err)
-			addToJournal(fmt.Sprintf("File: %s created...\n", filename))
+			log.Infof("File: %s created...\n", filename)
 		}
 	}
 
-	writeJournal()
+	// Run forever
+	log.Infoln("testgo version: " + version + " started...")
+	select {}
+
 }
