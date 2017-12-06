@@ -1,23 +1,54 @@
 apiVersion: v1
-kind: Pod
+kind: Service
 metadata:
   name: testgo
+  namespace: default
 spec:
-  volumes:
-  - name: shared-data
-    emptyDir: {}
-  containers:
-  - name: testgo-container
-    image: quay.cnqr.delivery/containerhosting/testgo
-    volumeMounts:
-    - name: shared-data
-      mountPath: /shared-data
-    command: ["testgo"]
-    args: ["-logtostderr", "-outputdir", "/shared-data"]
-  - name: named-container
-    image: quay.cnqr.delivery/containerhosting/testgo
-    volumeMounts:
-    - name: shared-data
-      mountPath: /shared-data
-    command: ["named"]
-    args: ["-g"]
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+    targetPort: 53
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+    targetPort: 53
+  selector:
+    app: testgo
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: testgo
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: testgo
+    spec:
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      containers:
+      - name: testgo-container
+        image: quay.cnqr.delivery/containerhosting/testgo
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared-data
+        command: ["testgo"]
+        args: ["-logtostderr", "-outputdir", "/shared-data"]
+      - name: named-container
+        image: quay.cnqr.delivery/containerhosting/testgo
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared-data
+        command: ["named"]
+        args: ["-g"]
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP

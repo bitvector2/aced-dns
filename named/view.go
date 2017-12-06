@@ -11,9 +11,9 @@ view {{ .Name }} {
 	match-clients {
 		{{ .Clients.Name }};
 	};
-	{{ range .Zones }}
-		{{ . }}
-	{{ end }}
+{{ range .Zones }}
+	{{ . }}
+{{ end }}
 };
 `
 )
