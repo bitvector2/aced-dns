@@ -1,126 +1,73 @@
 package main
 
 import (
-	"bytes"
-	"flag"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"text/template"
+	"net"
 
-	"github.com/bitvector2/testgo/pods"
-	log "github.com/golang/glog"
+	"github.com/bitvector2/testgo/named"
+	"github.com/bitvector2/testgo/utils"
 )
 
 const (
 	version = "1.0.0"
-
-	letter = `
-Dear {{.Name}},
-{{if .Attended}}
-It was a pleasure to see you at the wedding.
-{{- else}}
-It is a shame you couldn't make it to the wedding.
-{{- end}}
-{{with .Gift -}}
-Thank you for the lovely {{.}}.
-{{end}}
-Best wishes,
-Josie
-`
 )
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func createFile(filename string, newData []byte, perm os.FileMode) error {
-	return ioutil.WriteFile(filename, newData, perm)
-}
-
-func updateFile(filename string, newData []byte, perm os.FileMode) (bool, error) {
-	var err error
-	var oldData []byte
-
-	// read error occurred thus createFile should be called
-	oldData, err = ioutil.ReadFile(filename)
-	if err != nil {
-		return false, err
-	}
-
-	if bytes.Compare(oldData, newData) != 0 {
-		err = ioutil.WriteFile(filename, newData, perm)
-		return true, err
-	}
-
-	return false, nil
-}
-
-func deleteFile(filename string) error {
-	return os.Remove(filename)
-}
-
 func main() {
-	outputDir := flag.String("outputdir", "", "Absolute path to the output directory")
-	kubeConfig := flag.String("kubeconfig", "", "Absolute path to the Kubernetes config file")
-	masterURL := flag.String("masterurl", "", "URL to Kubernetes API server")
-	flag.Parse()
+	//outputDir := flag.String("outputdir", "", "Absolute path to the output directory")
+	//kubeConfig := flag.String("kubeconfig", "", "Absolute path to the Kubernetes config file")
+	//masterURL := flag.String("masterurl", "", "URL to Kubernetes API server")
+	//flag.Parse()
+	//
+	//var err error
+	//var buf bytes.Buffer
+	//buf.WriteString("// empty\n")
+	//
+	//err = utils.CreateFile(fmt.Sprintf("%s/named.conf.acllist", *outputDir), buf.Bytes(), os.FileMode(0666))
+	//utils.Check(err)
+	//
+	//err = utils.CreateFile(fmt.Sprintf("%s/named.conf.viewlist", *outputDir), buf.Bytes(), os.FileMode(0666))
+	//utils.Check(err)
+	//
+	//// Create our custom controller
+	//c := pods.New(*kubeConfig, *masterURL)
+	//
+	//// Start our custom controller
+	//stop := make(chan struct{})
+	//defer close(stop)
+	//go c.Run(1, stop)
 
-	var err error
-	var buf bytes.Buffer
-	buf.WriteString("// empty\n")
-
-	err = createFile(fmt.Sprintf("%s/named.conf.acllist", *outputDir), buf.Bytes(), os.FileMode(0666))
-	check(err)
-
-	err = createFile(fmt.Sprintf("%s/named.conf.viewlist", *outputDir), buf.Bytes(), os.FileMode(0666))
-	check(err)
-
-	// Create our custom controller
-	c := pods.New(*kubeConfig, *masterURL)
-
-	// Start our custom controller
-	stop := make(chan struct{})
-	defer close(stop)
-	go c.Run(1, stop)
-
-	// Prepare some data to insert into the template.
-	type Recipient struct {
-		Name, Gift string
-		Attended   bool
+	acl1 := named.NewAcl("acl1")
+	for i := 1; i < 3; i++ {
+		ip, subnet, err := net.ParseCIDR("192.168.8.1/24")
+		utils.Check(err)
+		acl1.AddElement(*named.NewCidrAddress(ip, subnet.Mask))
 	}
-	var recipients = []Recipient{
-		{"Aunt Mildred", "bone china tea set", true},
-		{"Uncle John", "moleskin hat", false},
-		{"Cousin Rodney", "", false},
+	view1 := named.NewView("view1", *acl1)
+	view1.AddZone(*named.NewZone("zone1", "/tmp/zone1.txt"))
+
+	acl2 := named.NewAcl("acl2")
+	for i := 1; i < 3; i++ {
+		ip, subnet, err := net.ParseCIDR("192.168.9.1/24")
+		utils.Check(err)
+		acl2.AddElement(*named.NewCidrAddress(ip, subnet.Mask))
 	}
+	view2 := named.NewView("view2", *acl2)
+	view2.AddZone(*named.NewZone("zone2", "/tmp/zone2.txt"))
 
-	// Create a new template and parse the letter into it.
-	t := template.Must(template.New("letter").Parse(letter))
+	aclList := named.NewAclList("/tmp/acllist.txt")
+	aclList.AddAcl(*acl1)
+	aclList.AddAcl(*acl2)
 
-	// Execute the template for each recipient.
-	for i, r := range recipients {
-		filename := fmt.Sprintf("%s/%d.txt", *outputDir, i)
-		var buf bytes.Buffer
-		err := t.Execute(&buf, r)
-		check(err)
+	fmt.Print(aclList)
 
-		changed, err := updateFile(filename, buf.Bytes(), os.FileMode(0666))
-		if changed {
-			log.Infof("File: %s changed...\n", filename)
+	viewList := named.NewViewList("/tmp/viewlist.txt")
+	viewList.AddView(*view1)
+	viewList.AddView(*view2)
 
-		}
-		if err != nil {
-			err := createFile(filename, buf.Bytes(), os.FileMode(0666))
-			check(err)
-			log.Infof("File: %s created...\n", filename)
-		}
-	}
+	fmt.Print(viewList)
 
 	// Run forever
-	log.Infoln("testgo version: " + version + " started...")
-	select {}
+	//log.Infoln("testgo version: " + version + " started...")
+	//select {}
 
 }
