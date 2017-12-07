@@ -26,6 +26,9 @@ build: prep
 docker-build:
 	docker build -t $(NAME):latest .
 
+run: build
+	./$(NAME) -logtostderr -kubeconfig $(HOME)/.kube/config -outputdir /tmp
+
 test: build
 	./$(NAME) -h || true
 
