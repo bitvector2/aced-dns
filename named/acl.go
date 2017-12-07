@@ -18,7 +18,7 @@ acl {{ .Name }} {
 type Acl struct {
 	Name     string
 	template *template.Template
-	Elements []CidrAddress
+	Elements map[string]CidrAddress
 }
 
 func NewAcl(name string) *Acl {
@@ -27,11 +27,11 @@ func NewAcl(name string) *Acl {
 	return &Acl{
 		Name:     name,
 		template: t,
-		Elements: make([]CidrAddress, 0),
+		Elements: make(map[string]CidrAddress, 0),
 	}
 }
 
-func (a *Acl) String() string {
+func (a Acl) String() string {
 	var buf bytes.Buffer
 	err := a.template.Execute(&buf, a)
 	if err != nil {
@@ -40,6 +40,23 @@ func (a *Acl) String() string {
 	return buf.String()
 }
 
-func (a *Acl) AddElement(element CidrAddress) {
-	a.Elements = append(a.Elements, element)
+func (a *Acl) Add(key string, element CidrAddress) {
+	a.Elements[key] = element
+}
+
+func (a *Acl) Delete(key string) {
+	delete(a.Elements, key)
+}
+
+func (a Acl) Contains(key string) bool {
+	for k := range a.Elements {
+		if k == key {
+			return true
+		}
+	}
+	return false
+}
+
+func (a Acl) Len() int {
+	return len(a.Elements)
 }

@@ -2,6 +2,7 @@ package named
 
 import (
 	"bytes"
+	"net"
 	"text/template"
 )
 
@@ -11,32 +12,37 @@ view {{ .Name }} {
     match-clients {
         {{ .Clients.Name }};
     };
-    {{ range .Zones }}
-    {{ . }}
-    {{ end }}
+
+    recursion no;
+
+    forwarders {
+        {{- range .Forwarders }}
+        {{ . }};
+        {{- end }}
+    };
 };
 `
 )
 
 type View struct {
-	Name     string
-	template *template.Template
-	Clients  Acl
-	Zones    []Zone
+	Name       string
+	template   *template.Template
+	Clients    Acl
+	Forwarders map[string]net.IP
 }
 
-func NewView(name string, clientsAcl Acl) *View {
+func NewView(name string) *View {
 	t := template.Must(template.New("viewTemplate").Parse(viewTemplate))
 
 	return &View{
-		Name:     name,
-		template: t,
-		Clients:  clientsAcl,
-		Zones:    make([]Zone, 0),
+		Name:       name,
+		template:   t,
+		Clients:    *NewAcl(name), // aclname and viewname must match
+		Forwarders: make(map[string]net.IP, 0),
 	}
 }
 
-func (v *View) String() string {
+func (v View) String() string {
 	var buf bytes.Buffer
 	err := v.template.Execute(&buf, v)
 	if err != nil {
@@ -45,12 +51,23 @@ func (v *View) String() string {
 	return buf.String()
 }
 
-func (v *View) AddZone(zone Zone) {
-	v.Zones = append(v.Zones, zone)
+func (v *View) Add(ip net.IP) {
+	v.Forwarders[ip.String()] = ip
 }
 
-func (v *View) Save() {
-	for z := 0; z < len(v.Zones); z++ {
-		v.Zones[z].Save()
+func (v *View) Delete(ip net.IP) {
+	delete(v.Forwarders, ip.String())
+}
+
+func (v View) Contains(ip net.IP) bool {
+	for _, v := range v.Forwarders {
+		if v.String() == ip.String() {
+			return true
+		}
 	}
+	return false
+}
+
+func (v View) Len() int {
+	return len(v.Forwarders)
 }

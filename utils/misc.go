@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"os/exec"
+
+	log "github.com/golang/glog"
 )
 
 func Check(err error) {
@@ -34,6 +37,9 @@ func UpdateFile(filename string, newData []byte, perm os.FileMode) (bool, error)
 	return false, nil
 }
 
-func DeleteFile(filename string) error {
-	return os.Remove(filename)
+func RunRndc() {
+	rndcCmd := exec.Command("rndc", "reload")
+	text, err := rndcCmd.Output()
+	Check(err)
+	log.Info(text)
 }

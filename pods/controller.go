@@ -2,7 +2,6 @@ package pods
 
 import (
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/bitvector2/testgo/named"
@@ -127,25 +126,30 @@ func (c *Controller) processPod(key string) error {
 		acedDns := obj.(*apiV1.Pod).GetObjectMeta().GetAnnotations()["concur.com/aced-nameserver"]
 
 		if podIp != "" && acedEnv != "" && acedDns != "" {
-			ip, subnet, err := net.ParseCIDR(podIp + "/32")
-			utils.Check(err) // FIXME
+			log.Infof("adding %s to %s DNS\n", key, acedEnv)
 
-			acl := named.NewAcl(acedEnv)
-			acl.AddElement(*named.NewCidrAddress(ip, subnet.Mask))
-			c.aclList.AddAcl(*acl)
-			c.aclList.Save()
+			if c.aclList.Contains(acedEnv) {
+				c.aclList.AddElement(key, acedEnv, podIp)
+			} else {
+				c.aclList.Add(acedEnv)
+				c.aclList.AddElement(key, acedEnv, podIp)
+			}
 
-			rr := named.NewResourceRecord("@", -1, "IN", "SOA", fmt.Sprintf("%s. root.%s. ( 2 604800 86400 2419200 604800 )", acedEnv, acedEnv))
-			zone := named.NewZone(acedEnv, c.outputDir)
-			zone.AddResourceRecord(*rr)
+			if c.viewList.Contains(acedEnv) {
+				c.viewList.AddForwarder(acedEnv, acedDns)
+			} else {
+				c.viewList.Add(acedEnv)
+				c.viewList.AddForwarder(acedEnv, acedDns)
+			}
 
-			view := named.NewView(acedEnv, *acl)
-			view.AddZone(*zone)
-			c.viewList.AddView(*view)
-			c.viewList.Save()
+			syncNamed(c.aclList, c.viewList)
 		}
 	} else {
-		log.Infof("pod %s does not exist\n", key)
+		log.Infof("removing %s from DNS\n", key)
+
+		c.aclList.DelElement(key)
+
+		syncNamed(c.aclList, c.viewList)
 	}
 
 	return nil
@@ -202,5 +206,20 @@ func (c *Controller) Run(threadiness int, stopCh chan struct{}) {
 
 func (c *Controller) runWorker() {
 	for c.processNextItem() {
+	}
+}
+
+func syncNamed(aclList named.AclList, viewList named.ViewList) {
+	zombies := aclList.Zombies()
+	for i := 0; i < len(zombies); i++ {
+		aclList.Delete(zombies[i])
+		viewList.Delete(zombies[i])
+	}
+
+	aclIsDirty := aclList.Save()
+	viewIsDirty := viewList.Save()
+	if aclIsDirty || viewIsDirty {
+		log.Infof("acllist changed = %t, viewlist changed = %t - reloading named configuration\n", aclIsDirty, viewIsDirty)
+		utils.RunRndc()
 	}
 }

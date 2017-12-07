@@ -24,7 +24,6 @@ func main() {
 
 	var err error
 	var buf bytes.Buffer
-	buf.WriteString("// empty\n")
 
 	err = utils.CreateFile(fmt.Sprintf("%s/named.conf.acllist", *outputDir), buf.Bytes(), os.FileMode(0666))
 	utils.Check(err)

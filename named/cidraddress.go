@@ -6,18 +6,18 @@ import (
 )
 
 type CidrAddress struct {
-	Ip   net.IP
-	Mask net.IPMask
+	ip   net.IP
+	mask net.IPMask
 }
 
 func NewCidrAddress(ip net.IP, mask net.IPMask) *CidrAddress {
 	return &CidrAddress{
-		Ip:   ip,
-		Mask: mask,
+		ip:   ip,
+		mask: mask,
 	}
 }
 
-func (c *CidrAddress) String() string {
-	ones, _ := c.Mask.Size()
-	return fmt.Sprintf("%s/%d", c.Ip, ones)
+func (c CidrAddress) String() string {
+	ones, _ := c.mask.Size()
+	return fmt.Sprintf("%s/%d", c.ip, ones)
 }
