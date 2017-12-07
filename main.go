@@ -32,11 +32,11 @@ func main() {
 	err = utils.CreateFile(fmt.Sprintf("%s/named.conf.viewlist", *outputDir), buf.Bytes(), os.FileMode(0666))
 	utils.Check(err)
 
-	aclList := named.NewAclList(fmt.Sprintf("%s/named.conf.acllist", *outputDir))
-	viewList := named.NewViewList(fmt.Sprintf("%s/named.conf.viewlist", *outputDir))
+	aclList := named.NewAclList(*outputDir)
+	viewList := named.NewViewList(*outputDir)
 
 	// Create our custom controller
-	c := pods.New(*kubeConfig, *masterURL, *aclList, *viewList)
+	c := pods.New(*kubeConfig, *masterURL, *aclList, *viewList, *outputDir)
 
 	// Start our custom controller
 	stop := make(chan struct{})

@@ -25,5 +25,8 @@ func NewResourceRecord(name string, ttl int, recordClass string, recordType stri
 }
 
 func (r *ResourceRecord) String() string {
-	return fmt.Sprintf("%s %d %s %s %s", r.name, r.ttl, r.recordClass, r.recordType, r.recordData)
+	if r.ttl <= 0 {
+		return fmt.Sprintf("%s %s %s %s\n", r.name, r.recordClass, r.recordType, r.recordData)
+	}
+	return fmt.Sprintf("%s %d %s %s %s\n", r.name, r.ttl, r.recordClass, r.recordType, r.recordData)
 }

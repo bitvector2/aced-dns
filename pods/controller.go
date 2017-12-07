@@ -20,14 +20,15 @@ import (
 )
 
 type Controller struct {
-	indexer  cache.Indexer
-	queue    workqueue.RateLimitingInterface
-	informer cache.Controller
-	aclList  named.AclList
-	viewList named.ViewList
+	indexer   cache.Indexer
+	queue     workqueue.RateLimitingInterface
+	informer  cache.Controller
+	aclList   named.AclList
+	viewList  named.ViewList
+	outputDir string
 }
 
-func New(kubeConfig string, masterURL string, aclList named.AclList, viewList named.ViewList) *Controller {
+func New(kubeConfig string, masterURL string, aclList named.AclList, viewList named.ViewList, outputDir string) *Controller {
 	// creates the connection
 	var config *rest.Config
 	var err error
@@ -79,38 +80,13 @@ func New(kubeConfig string, masterURL string, aclList named.AclList, viewList na
 		},
 	}, cache.Indexers{})
 
-	acl1 := named.NewAcl("acl1")
-	for i := 1; i < 3; i++ {
-		ip, subnet, err := net.ParseCIDR("192.168.8.1/24")
-		utils.Check(err)
-		acl1.AddElement(*named.NewCidrAddress(ip, subnet.Mask))
-	}
-	view1 := named.NewView("view1", *acl1)
-	view1.AddZone(*named.NewZone("zone1", "/tmp/zone1.txt"))
-
-	acl2 := named.NewAcl("acl2")
-	for i := 1; i < 3; i++ {
-		ip, subnet, err := net.ParseCIDR("192.168.9.1/24")
-		utils.Check(err)
-		acl2.AddElement(*named.NewCidrAddress(ip, subnet.Mask))
-	}
-	view2 := named.NewView("view2", *acl2)
-	view2.AddZone(*named.NewZone("zone2", "/tmp/zone2.txt"))
-
-	aclList.AddAcl(*acl1)
-	aclList.AddAcl(*acl2)
-	fmt.Print(aclList.String())
-
-	viewList.AddView(*view1)
-	viewList.AddView(*view2)
-	fmt.Print(viewList.String())
-
 	return &Controller{
-		informer: informer,
-		indexer:  indexer,
-		queue:    queue,
-		aclList:  aclList,
-		viewList: viewList,
+		informer:  informer,
+		indexer:   indexer,
+		queue:     queue,
+		aclList:   aclList,
+		viewList:  viewList,
+		outputDir: outputDir,
 	}
 }
 
@@ -146,7 +122,28 @@ func (c *Controller) processPod(key string) error {
 	}
 
 	if exists {
-		log.Infof("pod %s has IP address %s\n", key, obj.(*apiV1.Pod).Status.PodIP)
+		podIp := obj.(*apiV1.Pod).Status.PodIP
+		acedEnv := obj.(*apiV1.Pod).GetObjectMeta().GetAnnotations()["concur.com/aced-environment"]
+		acedDns := obj.(*apiV1.Pod).GetObjectMeta().GetAnnotations()["concur.com/aced-nameserver"]
+
+		if podIp != "" && acedEnv != "" && acedDns != "" {
+			ip, subnet, err := net.ParseCIDR(podIp + "/32")
+			utils.Check(err) // FIXME
+
+			acl := named.NewAcl(acedEnv)
+			acl.AddElement(*named.NewCidrAddress(ip, subnet.Mask))
+			c.aclList.AddAcl(*acl)
+			c.aclList.Save()
+
+			rr := named.NewResourceRecord("@", -1, "IN", "SOA", fmt.Sprintf("%s. root.%s. ( 2 604800 86400 2419200 604800 )", acedEnv, acedEnv))
+			zone := named.NewZone(acedEnv, c.outputDir)
+			zone.AddResourceRecord(*rr)
+
+			view := named.NewView(acedEnv, *acl)
+			view.AddZone(*zone)
+			c.viewList.AddView(*view)
+			c.viewList.Save()
+		}
 	} else {
 		log.Infof("pod %s does not exist\n", key)
 	}

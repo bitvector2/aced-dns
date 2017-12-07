@@ -27,7 +27,7 @@ docker-build:
 	docker build -t $(NAME):latest .
 
 test: build
-	./$(NAME) -logtostderr -kubeconfig $(HOME)/.kube/config -outputdir /tmp
+	./$(NAME) -h || true
 
 docker-test: docker-build
 	docker run -i -t $(NAME):latest

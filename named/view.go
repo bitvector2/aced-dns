@@ -8,12 +8,12 @@ import (
 const (
 	viewTemplate = `
 view {{ .Name }} {
-	match-clients {
-		{{ .Clients.Name }};
-	};
-{{ range .Zones }}
-	{{ . }}
-{{ end }}
+    match-clients {
+        {{ .Clients.Name }};
+    };
+    {{ range .Zones }}
+    {{ . }}
+    {{ end }}
 };
 `
 )
@@ -47,4 +47,10 @@ func (v *View) String() string {
 
 func (v *View) AddZone(zone Zone) {
 	v.Zones = append(v.Zones, zone)
+}
+
+func (v *View) Save() {
+	for z := 0; z < len(v.Zones); z++ {
+		v.Zones[z].Save()
+	}
 }

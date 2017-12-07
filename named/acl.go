@@ -8,9 +8,9 @@ import (
 const (
 	aclTemplate = `
 acl {{ .Name }} {
-{{- range .Elements }}
+    {{- range .Elements }}
     {{ . }};
-{{- end }}
+    {{- end }}
 };
 `
 )
