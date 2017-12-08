@@ -1,13 +1,4 @@
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-dns
-  namespace: kube-system
-data:
-  upstreamNameservers: |
-    ["192.168.143.153"]
----
-apiVersion: v1
 kind: Service
 metadata:
   name: aced-dns
@@ -24,6 +15,8 @@ spec:
     targetPort: 53
   selector:
     app: aced-dns
+  clusterIP: 192.168.128.10
+  type: ClusterIP
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
