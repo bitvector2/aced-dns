@@ -39,7 +39,7 @@ func UpdateFile(filename string, newData []byte, perm os.FileMode) (bool, error)
 
 func RunRndc() {
 	rndcCmd := exec.Command("rndc", "reload")
-	text, err := rndcCmd.Output()
+	buf, err := rndcCmd.Output()
 	Check(err)
-	log.Info(text)
+	log.Info(string(buf[:]))
 }
