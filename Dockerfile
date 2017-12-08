@@ -12,6 +12,7 @@ RUN apk --update --no-cache add bind bind-tools && \
     rndc-confgen -a && \
     cp -p /etc/bind/named.conf.authoritative /etc/bind/named.conf && \
     sed -i~ 's/127\.0\.0\.1/any/' /etc/bind/named.conf && \
+    sed -i~ '/^options ndots:.$/d' /etc/resolv.conf && \
     echo 'include "/shared-data/named.conf.acllist";' >> /etc/bind/named.conf && \
     echo 'include "/shared-data/named.conf.viewlist";' >> /etc/bind/named.conf
 
