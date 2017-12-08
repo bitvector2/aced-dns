@@ -11,8 +11,9 @@ COPY . .
 RUN apk --update --no-cache add bind bind-tools && \
     rndc-confgen -a && \
     cp -p /etc/bind/named.conf.authoritative /etc/bind/named.conf && \
-    sed -i~ 's/127\.0\.0\.1/any/' /etc/bind/named.conf && \
-    sed -i~ 's/allow-recursion { none; }/allow-recursion { any; }/' /etc/bind/named.conf && \
+    sed -i~ 's/listen-on { 127.0.0.1; };/listen-on { any; };/' /etc/bind/named.conf && \
+    sed -i~ 's/allow-recursion { none; };/allow-recursion { any; };/' /etc/bind/named.conf && \
+    sed -i~ '/recursion no;/d' /etc/bind/named.conf && \
     echo 'include "/shared-data/named.conf.acllist";' >> /etc/bind/named.conf && \
     echo 'include "/shared-data/named.conf.viewlist";' >> /etc/bind/named.conf
 
