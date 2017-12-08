@@ -7,7 +7,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/bitvector2/testgo/utils"
+	"github.com/bitvector2/aced-dns/utils"
 )
 
 const (

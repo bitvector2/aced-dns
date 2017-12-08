@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bitvector2/testgo/named"
-	"github.com/bitvector2/testgo/pods"
-	"github.com/bitvector2/testgo/utils"
+	"github.com/bitvector2/aced-dns/named"
+	"github.com/bitvector2/aced-dns/pods"
+	"github.com/bitvector2/aced-dns/utils"
 	log "github.com/golang/glog"
 )
 
@@ -42,6 +42,6 @@ func main() {
 	defer close(stop)
 	go c.Run(1, stop)
 
-	log.Infoln("testgo version: " + version + " started...")
+	log.Infoln("aced-dns version: " + version + " started...")
 	select {}
 }

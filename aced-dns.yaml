@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: testgo
+  name: aced-dns
   namespace: default
 spec:
   ports:
@@ -14,32 +14,32 @@ spec:
     protocol: TCP
     targetPort: 53
   selector:
-    app: testgo
+    app: aced-dns
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: testgo
+  name: aced-dns
   namespace: default
 spec:
   template:
     metadata:
       labels:
-        app: testgo
+        app: aced-dns
     spec:
       volumes:
       - name: shared-data
         emptyDir: {}
       containers:
-      - name: testgo-container
-        image: quay.cnqr.delivery/containerhosting/testgo
+      - name: aced-dns-container
+        image: quay.cnqr.delivery/containerhosting/aced-dns
         volumeMounts:
         - name: shared-data
           mountPath: /shared-data
-        command: ["testgo"]
+        command: ["aced-dns"]
         args: ["-logtostderr", "-outputdir", "/shared-data"]
       - name: named-container
-        image: quay.cnqr.delivery/containerhosting/testgo
+        image: quay.cnqr.delivery/containerhosting/aced-dns
         volumeMounts:
         - name: shared-data
           mountPath: /shared-data

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bitvector2/testgo/named"
-	"github.com/bitvector2/testgo/utils"
+	"github.com/bitvector2/aced-dns/named"
+	"github.com/bitvector2/aced-dns/utils"
 	log "github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/util/runtime"

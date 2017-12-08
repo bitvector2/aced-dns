@@ -1,4 +1,4 @@
-NAME := testgo
+NAME := aced-dns
 PKG := github.com/bitvector2/$(NAME)
 FILES := $(shell find . -type f -name "*.go" | egrep -v "./vendor")
 
