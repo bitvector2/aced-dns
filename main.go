@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -23,12 +22,9 @@ func main() {
 	flag.Parse()
 
 	var err error
-	var buf bytes.Buffer
-
-	err = utils.CreateFile(fmt.Sprintf("%s/named.conf.acllist", *outputDir), buf.Bytes(), os.FileMode(0666))
+	err = utils.CreateFile(fmt.Sprintf("%s/named.conf.acllist", *outputDir), nil, os.FileMode(0666))
 	utils.Check(err)
-
-	err = utils.CreateFile(fmt.Sprintf("%s/named.conf.viewlist", *outputDir), buf.Bytes(), os.FileMode(0666))
+	err = utils.CreateFile(fmt.Sprintf("%s/named.conf.viewlist", *outputDir), nil, os.FileMode(0666))
 	utils.Check(err)
 
 	aclList := named.NewAclList(*outputDir)

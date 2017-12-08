@@ -69,7 +69,7 @@ func (al AclList) Contains(aclname string) bool {
 	return false
 }
 
-func (al AclList) Zombies() []string {
+func (al AclList) Garbage() []string {
 	aclnames := make([]string, 0)
 	for k, v := range al.Acls {
 		if v.Len() == 0 {

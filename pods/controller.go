@@ -210,10 +210,10 @@ func (c *Controller) runWorker() {
 }
 
 func syncNamed(aclList named.AclList, viewList named.ViewList) {
-	zombies := aclList.Zombies()
-	for i := 0; i < len(zombies); i++ {
-		aclList.Delete(zombies[i])
-		viewList.Delete(zombies[i])
+	garbage := aclList.Garbage()
+	for i := 0; i < len(garbage); i++ {
+		aclList.Delete(garbage[i])
+		viewList.Delete(garbage[i])
 	}
 
 	aclIsDirty := aclList.Save()
