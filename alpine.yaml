@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: alpine
+  namespace: default
+spec:
+  replicas: 2
+  template:
+    metadata:
+      annotations:
+        concur.com/aced-nameserver: 10.253.143.197
+        concur.com/aced-environment: aced-ml-integtest-20171129a
+      labels:
+        app: alpine
+    spec:
+      containers:
+      - name: alpine
+        image: amd64/alpine
+        command: ["sleep"]
+        args: ["86400"]

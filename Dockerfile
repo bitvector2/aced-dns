@@ -8,7 +8,7 @@ FROM golang:alpine
 WORKDIR /go/src/github.com/bitvector2/aced-dns
 COPY . .
 
-RUN apk --update --no-cache add bind && \
+RUN apk --update --no-cache add bind bind-tools && \
     rndc-confgen -a && \
     cp -p /etc/bind/named.conf.authoritative /etc/bind/named.conf && \
     sed -i~ 's/127\.0\.0\.1/any/' /etc/bind/named.conf && \
