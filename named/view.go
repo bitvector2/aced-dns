@@ -13,7 +13,8 @@ view {{ .Name }} {
         {{ .Clients.Name }};
     };
 
-    recursion no;
+    recursion yes;
+    forward only;
 
     forwarders {
         {{- range .Forwarders }}
