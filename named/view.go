@@ -12,15 +12,15 @@ view {{ .Name }} {
     match-clients {
         {{ .Clients.Name }};
     };
-
-    recursion yes;
-    forward only;
-
-    forwarders {
-        {{- range .Forwarders }}
-        {{ . }};
-        {{- end }}
+    zone "consul.service.cnqr.io" {
+        type forward;
+        forwarders {
+            {{- range .Forwarders }}
+            {{ . }};
+            {{- end }}
+        };
     };
+    recursion yes;
 };
 `
 )

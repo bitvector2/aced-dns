@@ -15,14 +15,8 @@ const (
     {{- range .Views }}
     {{ . }}
     {{- end }}
-
 view default {
     recursion yes;
-    forward only;
-
-    forwarders {
-        192.168.128.10;
-    };
 };
 `
 )
