@@ -20,14 +20,12 @@ view default {
         type hint;
         file "named.ca";
     };
-
     zone "localhost" IN {
         type master;
         file "pri/localhost.zone";
         allow-update { none; };
         notify no;
     };
-
     zone "127.in-addr.arpa" IN {
         type master;
         file "pri/127.zone";
