@@ -8,9 +8,9 @@ import (
 
 const (
 	viewTemplate = `
-view {{ .Name }} {
+view "{{ .Name }}" {
     match-clients {
-        {{ .Clients.Name }};
+        "{{ .Clients.Name }}";
     };
     zone "consul.service.cnqr.io" {
         type forward;

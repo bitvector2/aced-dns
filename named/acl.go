@@ -7,7 +7,7 @@ import (
 
 const (
 	aclTemplate = `
-acl {{ .Name }} {
+acl "{{ .Name }}" {
     {{- range .Elements }}
     {{ . }};
     {{- end }}
