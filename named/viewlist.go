@@ -15,7 +15,7 @@ const (
     {{- range .Views }}
     {{ . }}
     {{- end }}
-view default {
+view "default" {
     zone "." IN {
         type hint;
         file "named.ca";
