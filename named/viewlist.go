@@ -15,6 +15,9 @@ const (
     {{- range .Views }}
     {{ . }}
     {{- end }}
+    "default" {
+        recursion yes;
+    };
 `
 )
 

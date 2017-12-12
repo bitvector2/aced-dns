@@ -15,7 +15,7 @@ spec:
     targetPort: 53
   selector:
     app: aced-dns
-  clusterIP: 192.168.128.10
+  clusterIP: 10.96.0.10
   type: ClusterIP
 ---
 apiVersion: extensions/v1beta1
